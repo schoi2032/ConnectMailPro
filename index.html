@@ -26,7 +26,7 @@
 <body class="bg-slate-50 text-slate-900 h-screen">
 
     <!-- Registration/Login Overlay -->
-    <div id="registration-overlay" class="fixed inset-0 z-[100] modal-overlay flex items-center justify-center p-4 hidden">
+    <div id="registration-overlay" class="fixed inset-0 z-[100] modal-overlay flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl p-8 max-w-2xl w-full shadow-2xl animate-slide-up overflow-y-auto max-h-[90vh] custom-scrollbar">
             
             <!-- Welcome Back View (Login) -->
@@ -222,6 +222,13 @@
         let allMails = [];
 
         async function init() {
+            // Initial UI check
+            if (userProfile) {
+                showLoginView();
+            } else {
+                showRegistration();
+            }
+
             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                 await signInWithCustomToken(auth, __initial_auth_token);
             } else {
@@ -229,12 +236,8 @@
             }
 
             onAuthStateChanged(auth, (user) => {
-                if (user) {
-                    if (userProfile) {
-                        showLoginView();
-                    } else {
-                        showRegistration();
-                    }
+                if (user && userProfile) {
+                    // Silent refresh if already logged in
                 }
             });
             lucide.createIcons();
@@ -262,6 +265,8 @@
 
         window.showRegistration = () => {
             document.getElementById('registration-overlay').classList.remove('hidden');
+            document.getElementById('signup-view').classList.remove('hidden');
+            document.getElementById('login-view').classList.add('hidden');
             selectedAvatarUrl = `https://api.dicebear.com/7.x/${activeCategory}/svg?seed=${avatarSeeds[activeCategory][0]}`;
             renderAvatarGrid();
         };
