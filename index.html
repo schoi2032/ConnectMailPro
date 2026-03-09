@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ConnectMailPro</title>
+    <link rel="icon" type="image/x-icon" href="https://api.dicebear.com/7.x/bottts/svg?seed=Mail">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -36,7 +37,6 @@
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
         }
 
-        /* Unread styling */
         .email-item.unread .subject-text,
         .email-item.unread .sender-text {
             font-weight: 800 !important;
@@ -66,6 +66,7 @@
             transition: all 0.2s;
             border: 3px solid transparent;
             border-radius: 1rem;
+            overflow: hidden;
         }
 
         .avatar-option:hover {
@@ -80,15 +81,15 @@
 </head>
 <body class="bg-slate-50 text-slate-900 h-screen">
 
-    <!-- Registration Overlay -->
-    <div id="registration-overlay" class="fixed inset-0 z-[100] modal-overlay flex items-center justify-center p-4">
+    <!-- Registration/Profile Overlay -->
+    <div id="registration-overlay" class="fixed inset-0 z-[100] modal-overlay flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-3xl p-8 max-w-2xl w-full shadow-2xl animate-slide-up overflow-y-auto max-h-[90vh] custom-scrollbar text-center">
             <div class="flex flex-col items-center mb-6">
                 <div class="bg-blue-600 p-4 rounded-2xl text-white mb-4 shadow-lg shadow-blue-200">
-                    <i data-lucide="user-plus" class="w-8 h-8"></i>
+                    <i data-lucide="user-round" class="w-8 h-8"></i>
                 </div>
-                <h1 class="text-2xl font-bold text-slate-900">Welcome to ConnectMailPro</h1>
-                <p class="text-slate-500 mt-1 text-sm">Create your identity to start messaging.</p>
+                <h1 id="reg-title" class="text-2xl font-bold text-slate-900">Setup Your Profile</h1>
+                <p class="text-slate-500 mt-1 text-sm">Pick a look that matches your personality.</p>
             </div>
             
             <div class="space-y-6 text-left">
@@ -107,15 +108,26 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-3 text-center">Choose Your Avatar</label>
+                    <label class="block text-sm font-semibold text-slate-700 mb-3">Choose Your Avatar</label>
+                    <!-- Category Tabs -->
+                    <div class="flex gap-2 mb-4 overflow-x-auto pb-2 custom-scrollbar">
+                        <button onclick="changeAvatarCategory('avataaars')" class="cat-btn px-4 py-1.5 rounded-full text-xs font-bold bg-blue-600 text-white whitespace-nowrap">People</button>
+                        <button onclick="changeAvatarCategory('bottts')" class="cat-btn px-4 py-1.5 rounded-full text-xs font-bold bg-slate-100 text-slate-600 whitespace-nowrap">Robots</button>
+                        <button onclick="changeAvatarCategory('identicon')" class="cat-btn px-4 py-1.5 rounded-full text-xs font-bold bg-slate-100 text-slate-600 whitespace-nowrap">Abstract</button>
+                    </div>
                     <div id="avatar-grid" class="grid grid-cols-4 sm:grid-cols-6 gap-3">
                         <!-- Avatars will be injected here -->
                     </div>
                 </div>
 
-                <button onclick="registerUser()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-blue-200">
-                    Join ConnectMailPro
-                </button>
+                <div class="flex gap-3">
+                    <button id="cancel-reg-btn" onclick="hideRegistration()" class="hidden flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-4 rounded-xl transition-all">
+                        Cancel
+                    </button>
+                    <button onclick="saveUserProfile()" class="flex-[2] bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-blue-200">
+                        Save Changes
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -152,10 +164,15 @@
                 </button>
             </nav>
 
-            <div class="p-4 border-t border-slate-800 bg-slate-900/50">
+            <div class="p-4 border-t border-slate-800 bg-slate-900/50 group">
                 <div class="flex items-center gap-3">
-                    <img id="display-avatar" src="" class="w-10 h-10 rounded-xl bg-slate-700 border border-slate-700 object-cover" alt="Me">
-                    <div class="sidebar-text flex flex-col min-w-0">
+                    <div class="relative cursor-pointer" onclick="showRegistration(true)">
+                        <img id="display-avatar" src="" class="w-10 h-10 rounded-xl bg-slate-700 border border-slate-700 object-cover" alt="Me">
+                        <div class="absolute inset-0 bg-black/40 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <i data-lucide="edit-3" class="w-4 h-4 text-white"></i>
+                        </div>
+                    </div>
+                    <div class="sidebar-text flex flex-col min-w-0 flex-1">
                         <span id="display-name" class="text-xs font-semibold text-white truncate">User Name</span>
                         <span id="display-email" class="text-[10px] text-slate-500 truncate">email@connect.pro</span>
                     </div>
@@ -192,12 +209,11 @@
                     <div id="active-view" class="hidden flex flex-col h-full animate-slide-up">
                         <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-20">
                             <div class="flex items-center gap-2">
-                                <!-- BACK BUTTON -->
-                                <button onclick="closeReader()" class="flex items-center gap-1 px-3 py-2 text-blue-600 font-bold hover:bg-blue-50 rounded-xl transition-colors mr-2">
+                                <button onclick="closeReader()" class="flex items-center gap-1 px-3 py-2 text-blue-600 font-bold hover:bg-blue-50 rounded-xl transition-colors lg:hidden">
                                     <i data-lucide="chevron-left" class="w-5 h-5"></i>
-                                    <span>Inbox</span>
+                                    <span>Back</span>
                                 </button>
-                                <div class="h-6 w-px bg-slate-200 mx-2 hidden lg:block"></div>
+                                <div class="h-6 w-px bg-slate-200 mx-2 lg:hidden"></div>
                                 <button onclick="deleteCurrentEmail()" class="p-2 hover:bg-red-50 text-red-400 rounded-lg" title="Delete"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
                                 <button onclick="toggleStarCurrent()" id="star-btn" class="p-2 hover:bg-slate-100 rounded-lg" title="Star"><i data-lucide="star" class="w-5 h-5"></i></button>
                             </div>
@@ -208,7 +224,7 @@
                                 <img id="view-avatar-img" class="w-12 h-12 lg:w-14 lg:h-14 rounded-2xl bg-blue-100 border border-slate-100 shadow-sm object-cover" src="">
                                 <div class="min-w-0">
                                     <p id="view-from" class="font-bold text-slate-900 text-lg truncate">Sender Name</p>
-                                    <p class="text-xs text-slate-500">to <span class="font-medium text-blue-600">me</span></p>
+                                    <p class="text-xs text-slate-500">to <span id="view-to-me" class="font-medium text-blue-600">me</span></p>
                                 </div>
                                 <span id="view-date" class="ml-auto text-xs text-slate-400 italic shrink-0">Date</span>
                             </div>
@@ -242,12 +258,14 @@
     </div>
 
     <script>
-        const avatarSeeds = [
-            'Felix', 'Aneka', 'Caleb', 'Elsa', 'Jasper', 'Milo', 
-            'Luna', 'Oliver', 'Toby', 'Zoe', 'Buster', 'Pepper',
-            'Sasha', 'Bear', 'Coco', 'Daisy', 'Jack', 'Ruby'
-        ];
-        let selectedAvatarSeed = 'Felix';
+        const avatarSeeds = {
+            'avataaars': ['Felix', 'Aneka', 'Caleb', 'Elsa', 'Jasper', 'Milo', 'Luna', 'Oliver', 'Toby', 'Zoe', 'Buster', 'Pepper'],
+            'bottts': ['Gears', 'Sparky', 'Bolt', 'Circuit', 'Beep', 'Bop', 'Mecha', 'Droid', 'Chip', 'Byte'],
+            'identicon': ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
+        };
+        
+        let activeCategory = 'avataaars';
+        let selectedAvatarUrl = '';
 
         // State Management
         let userProfile = JSON.parse(localStorage.getItem('connect_user')) || null;
@@ -256,33 +274,75 @@
         let selectedMailId = null;
 
         function init() {
-            renderAvatarGrid();
             if (userProfile) {
                 document.getElementById('registration-overlay').classList.add('hidden');
                 document.getElementById('main-app').classList.remove('hidden');
                 updateUI();
                 renderList();
+            } else {
+                showRegistration(false);
             }
             lucide.createIcons();
+        }
+
+        function showRegistration(isEditing = false) {
+            const overlay = document.getElementById('registration-overlay');
+            const title = document.getElementById('reg-title');
+            const cancelBtn = document.getElementById('cancel-reg-btn');
+            
+            overlay.classList.remove('hidden');
+            
+            if (isEditing) {
+                title.textContent = "Edit Your Profile";
+                cancelBtn.classList.remove('hidden');
+                document.getElementById('reg-name').value = userProfile.name;
+                document.getElementById('reg-email').value = userProfile.email.split('@')[0];
+                selectedAvatarUrl = userProfile.avatar;
+            } else {
+                title.textContent = "Setup Your Profile";
+                cancelBtn.classList.add('hidden');
+                selectedAvatarUrl = `https://api.dicebear.com/7.x/${activeCategory}/svg?seed=${avatarSeeds[activeCategory][0]}`;
+            }
+            
+            renderAvatarGrid();
+        }
+
+        function hideRegistration() {
+            document.getElementById('registration-overlay').classList.add('hidden');
+        }
+
+        function changeAvatarCategory(cat) {
+            activeCategory = cat;
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-600', 'text-white');
+                btn.classList.add('bg-slate-100', 'text-slate-600');
+            });
+            event.target.classList.add('bg-blue-600', 'text-white');
+            event.target.classList.remove('bg-slate-100', 'text-slate-600');
+            renderAvatarGrid();
         }
 
         function renderAvatarGrid() {
             const grid = document.getElementById('avatar-grid');
             if (!grid) return;
-            grid.innerHTML = avatarSeeds.map(seed => `
-                <div class="avatar-option rounded-xl p-1 ${seed === selectedAvatarSeed ? 'selected' : ''}" 
-                     onclick="selectAvatar('${seed}')">
-                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}" class="w-full h-auto rounded-lg">
-                </div>
-            `).join('');
+            
+            grid.innerHTML = avatarSeeds[activeCategory].map(seed => {
+                const url = `https://api.dicebear.com/7.x/${activeCategory}/svg?seed=${seed}`;
+                return `
+                    <div class="avatar-option rounded-xl p-1 ${url === selectedAvatarUrl ? 'selected' : ''}" 
+                         onclick="selectAvatar('${url}')">
+                        <img src="${url}" class="w-full h-auto rounded-lg">
+                    </div>
+                `;
+            }).join('');
         }
 
-        window.selectAvatar = (seed) => {
-            selectedAvatarSeed = seed;
+        window.selectAvatar = (url) => {
+            selectedAvatarUrl = url;
             renderAvatarGrid();
         };
 
-        window.registerUser = () => {
+        window.saveUserProfile = () => {
             const name = document.getElementById('reg-name').value.trim();
             const emailHandle = document.getElementById('reg-email').value.trim().toLowerCase();
 
@@ -291,7 +351,7 @@
             userProfile = { 
                 name, 
                 email: emailHandle + "@connect.pro",
-                avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${selectedAvatarSeed}`
+                avatar: selectedAvatarUrl
             };
 
             localStorage.setItem('connect_user', JSON.stringify(userProfile));
@@ -301,7 +361,7 @@
                     id: Date.now(),
                     from: "Connect Support",
                     fromEmail: "support@connect.pro",
-                    fromAvatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=Support`,
+                    fromAvatar: `https://api.dicebear.com/7.x/bottts/svg?seed=Support`,
                     to: userProfile.email,
                     subject: "Welcome to ConnectMailPro!",
                     body: `Hi ${name},\n\nWelcome to ConnectMailPro! This is your local private workspace for messaging.\n\nYou can now send emails to anyone else, or even to yourself to save notes.\n\nHappy connecting!`,
@@ -312,7 +372,10 @@
                 localStorage.setItem('connect_mails', JSON.stringify(mails));
             }
 
-            init();
+            hideRegistration();
+            document.getElementById('main-app').classList.remove('hidden');
+            updateUI();
+            renderList();
         };
 
         function updateUI() {
@@ -398,10 +461,9 @@
             if (!mail) return;
 
             selectedMailId = id;
-            mail.read = true; // Mark as read
+            mail.read = true; 
             localStorage.setItem('connect_mails', JSON.stringify(mails));
 
-            // Show Reader Panel
             const readerPanel = document.getElementById('reader-panel');
             readerPanel.classList.remove('translate-x-full');
             
@@ -409,9 +471,9 @@
             const view = document.getElementById('active-view');
             view.classList.remove('hidden');
 
-            // Populate Content
             document.getElementById('view-subject').textContent = mail.subject;
             document.getElementById('view-from').textContent = `${mail.from} <${mail.fromEmail}>`;
+            document.getElementById('view-to-me').textContent = mail.to === userProfile.email ? 'me' : mail.to;
             document.getElementById('view-body').textContent = mail.body;
             document.getElementById('view-date').textContent = mail.date;
             document.getElementById('view-avatar-img').src = mail.fromAvatar;
@@ -450,12 +512,14 @@
 
             if (!to || !subject || !body) return;
 
+            const recipientEmail = to.includes('@') ? to : to + "@connect.pro";
+
             const newMail = {
                 id: Date.now(),
                 from: userProfile.name,
                 fromEmail: userProfile.email,
                 fromAvatar: userProfile.avatar,
-                to: to.includes('@') ? to : to + "@connect.pro",
+                to: recipientEmail,
                 subject,
                 body,
                 date: new Date().toLocaleString(),
@@ -472,6 +536,11 @@
             bodyInput.value = '';
 
             renderList();
+            
+            // If user is in Sent folder, they should see it immediately
+            if (activeFolder === 'sent') {
+                renderList();
+            }
         };
 
         window.deleteCurrentEmail = () => {
