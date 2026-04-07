@@ -72,7 +72,6 @@
 </head>
 <body class="h-screen overflow-hidden">
 
-    <!-- Auth / Setup Screen -->
     <div id="setup-screen" class="fixed inset-0 z-50 bg-slate-900 flex items-center justify-center p-6">
         <div class="bg-white w-full max-w-md rounded-[2rem] p-8 shadow-2xl animate-in">
             <div class="flex flex-col items-center text-center mb-8">
@@ -102,9 +101,7 @@
         </div>
     </div>
 
-    <!-- Main Application -->
     <div id="app-container" class="hidden flex h-full w-full opacity-0 transition-opacity duration-500">
-        <!-- Sidebar -->
         <aside class="w-72 glass-sidebar flex flex-col shrink-0">
             <div class="p-8 flex items-center gap-3">
                 <div class="text-blue-500">
@@ -143,9 +140,7 @@
             </div>
         </aside>
 
-        <!-- Main Content -->
         <main class="flex-1 flex flex-col min-w-0">
-            <!-- Header -->
             <header class="h-20 bg-white border-b border-slate-200 px-8 flex items-center justify-between shrink-0">
                 <div class="flex items-center gap-3">
                     <h2 id="current-folder-name" class="text-xl font-bold text-slate-900">Inbox</h2>
@@ -161,14 +156,11 @@
             </header>
 
             <div class="flex-1 flex overflow-hidden">
-                <!-- List Panel -->
                 <section class="w-96 border-r border-slate-200 flex flex-col bg-slate-50/50 shrink-0">
                     <div id="mail-list" class="flex-1 overflow-y-auto custom-scroll">
-                        <!-- Items injected here -->
                     </div>
                 </section>
 
-                <!-- Reader Panel -->
                 <section class="flex-1 bg-white overflow-y-auto custom-scroll">
                     <div id="no-selection" class="h-full flex flex-col items-center justify-center p-12 text-center">
                         <div class="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center text-slate-200 mb-4">
@@ -200,8 +192,6 @@
             </div>
         </main>
     </div>
-
-    <!-- Compose Modal -->
     <div id="compose-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeCompose()"></div>
         <div class="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl relative animate-in overflow-hidden flex flex-col">
@@ -246,16 +236,12 @@
     </div>
 
     <script>
-        // State Management
         let currentUser = null;
         let mails = [];
         let activeFolder = 'inbox';
         let selectedMailId = null;
-
-        // Colors for avatars
         const avatarColors = ['#2563eb', '#7c3aed', '#db2777', '#dc2626', '#ea580c', '#16a34a', '#0891b2'];
 
-        // Core Functions
         function init() {
             const savedUser = localStorage.getItem('cp_user');
             const savedMails = localStorage.getItem('cp_mails');
@@ -282,7 +268,6 @@
 
             localStorage.setItem('cp_user', JSON.stringify(currentUser));
             
-            // Add a welcome email
             const welcomeEmail = {
                 id: Date.now(),
                 senderName: "System Administrator",
@@ -306,8 +291,6 @@
             const container = document.getElementById('app-container');
             container.classList.remove('hidden');
             setTimeout(() => container.style.opacity = '1', 10);
-
-            // Set UI details
             document.getElementById('user-name-display').textContent = currentUser.name;
             document.getElementById('user-email-display').textContent = currentUser.email;
             
@@ -372,8 +355,6 @@
 
         function selectMail(mail) {
             selectedMailId = mail.id;
-            
-            // Mark as read
             if (mail.unread && activeFolder === 'inbox') {
                 mail.unread = false;
                 localStorage.setItem('cp_mails', JSON.stringify(mails));
@@ -402,8 +383,6 @@
         function switchFolder(folder) {
             activeFolder = folder;
             selectedMailId = null;
-            
-            // Update Nav UI
             document.getElementById('nav-inbox').className = folder === 'inbox' ? 'active-nav w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all' : 'w-full flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-white/5 transition-all';
             document.getElementById('nav-sent').className = folder === 'sent' ? 'active-nav w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all' : 'w-full flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-white/5 transition-all';
             
@@ -451,8 +430,6 @@
             localStorage.setItem('cp_mails', JSON.stringify(mails));
 
             closeCompose();
-            
-            // Switch to sent folder to see the result
             switchFolder('sent');
             selectMail(newMail);
         }
@@ -474,8 +451,6 @@
                 location.reload();
             }
         }
-
-        // Run app
         init();
     </script>
 </body>
